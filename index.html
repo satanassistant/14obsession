@@ -368,6 +368,18 @@ loveGif.onerror = function(){
     this.outerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><svg viewBox="0 0 120 120" width="220" height="220" xmlns="http://www.w3.org/2000/svg"><g><path d="M60 102s-35-20.8-46-33.5C5 55.6 20.3 36 39.7 40.7 47 42.5 60 52 60 52s13-9.5 20.3-11.3C99.7 36 115 55.6 106 68.5 95 81.2 60 102 60 102z" fill="#ff7fb3"/></g></svg></div>`;
   }
 };
+  <script>
+  // Música de fundo (loop infinito)
+  const audio = new Audio('musica.mp3');
+  audio.loop = true; // repetir para sempre
+  audio.volume = 1.0; // volume normal
+
+  // Tocar música ao primeiro clique em qualquer lugar
+  document.addEventListener('click', function startMusic() {
+    audio.play().catch(err => console.log('Autoplay bloqueado, aguardando interação:', err));
+    // Remove o listener para não reiniciar a cada clique
+    document.removeEventListener('click', startMusic);
+  });
 </script>
 </body>
 </html>
