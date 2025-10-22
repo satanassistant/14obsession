@@ -193,7 +193,6 @@ Obrigado por tudo, meu amor! Tenho muito orgulho de você, de poder te chamar de
 
       <aside class="lado-direito" aria-label="Área com gif e botões">
         <div class="gif-wrap" id="gifWrap" title="GIF do amor">
-          <!-- Tentei usar o ID do imgur. Se não aparecer, troque para a URL direta do gif (ex: https://i.imgur.com/Jq4yEbh.gif) -->
           <img id="loveGif" src="https://i.imgur.com/cyTiNwi.gif" alt="Gif de amor (se não carregar, troque o src)" />
         </div>
 
@@ -205,7 +204,6 @@ Obrigado por tudo, meu amor! Tenho muito orgulho de você, de poder te chamar de
     </div>
   </div>
 
-  <!-- Página 2 -->
   <div class="page" id="page2" aria-hidden="true">
     <div class="page-inner" role="dialog" aria-modal="true" aria-labelledby="ask-title">
       <h2 id="ask-title">Você aceita namorar comigo?</h2>
@@ -216,15 +214,12 @@ Obrigado por tudo, meu amor! Tenho muito orgulho de você, de poder te chamar de
     </div>
   </div>
 
-  <!-- Mensagem após SIM -->
   <div class="message-overlay" id="msgOverlay" aria-hidden="true">
     <div class="message" id="loveMessage">Eu te amo muito muitão!</div>
   </div>
 
-  <!-- Tela preta NAU -->
   <div class="black-screen" id="blackScreen">ok :c</div>
 
-  <!-- Canvas para confete -->
   <canvas id="confettiCanvas" style="position:fixed; inset:0; pointer-events:none; z-index:50;"></canvas>
 
 <script>
@@ -239,10 +234,8 @@ const loveMessage = document.getElementById('loveMessage');
 const blackScreen = document.getElementById('blackScreen');
 
 btnContinue.addEventListener('click', () => {
-  // suavemente abre a "next page"
   page2.classList.add('active');
   page2.setAttribute('aria-hidden','false');
-  // pequena animação de transição já via CSS
 });
 
 document.addEventListener('keydown', (e)=>{
@@ -252,7 +245,6 @@ document.addEventListener('keydown', (e)=>{
   }
 });
 
-/* ---------- confete em formato de coração no canvas ---------- */
 const canvas = document.getElementById('confettiCanvas');
 const ctx = canvas.getContext('2d');
 let W = canvas.width = window.innerWidth;
@@ -267,7 +259,7 @@ class Heart {
     this.size = size; this.life = life; this.h = hue; this.age=0; this.rot = rand(0,Math.PI*2);
   }
   update(dt){
-    this.vy += 0.06 * dt; // gravidade leve
+    this.vy += 0.06 * dt;
     this.x += this.vx * dt;
     this.y += this.vy * dt;
     this.rot += 0.01 * dt;
@@ -278,7 +270,6 @@ class Heart {
     ctx.translate(this.x,this.y);
     ctx.rotate(this.rot);
     const s = this.size;
-    // desenhar um coração com path
     ctx.beginPath();
     ctx.moveTo(0, -s/2);
     ctx.bezierCurveTo(s, -s*0.9, s*1.1, s*0.3, 0, s);
@@ -299,15 +290,14 @@ function burstHearts(x,y, count=30){
     const vy = Math.sin(angle)*speed + rand(-1,1);
     const size = rand(8,20);
     const life = rand(80,160);
-    const hue = 320 + rand(-20,20); // rosados/violeta
+    const hue = 320 + rand(-20,20);
     hearts.push(new Heart(x + rand(-8,8), y + rand(-8,8), vx, vy, size, life, hue));
   }
 }
 
-/* animação */
 let last = performance.now();
 function animate(now){
-  const dt = Math.min(4,(now-last)/16.666); // frame-independent but clamped
+  const dt = Math.min(4,(now-last)/16.666);
   last = now;
   ctx.clearRect(0,0,W,H);
   for(let i=hearts.length-1;i>=0;i--){
@@ -320,14 +310,11 @@ function animate(now){
 }
 requestAnimationFrame(animate);
 
-/* gatilhos dos botões para confete e mensagens */
 function triggerLoveConfetti(originElement){
-  // burst centered on element
   const rect = originElement.getBoundingClientRect();
   const x = rect.left + rect.width/2;
   const y = rect.top + rect.height/2;
   burstHearts(x,y, 36);
-  // pequenos adicionais
   setTimeout(()=>burstHearts(x+rand(-40,40), y+rand(-40,40), 18), 120);
   setTimeout(()=>burstHearts(x+rand(-60,60), y+rand(-60,60), 12), 300);
 }
@@ -338,52 +325,35 @@ btnLove.addEventListener('click', (e)=>{
 
 btnYes.addEventListener('click', (e)=>{
   triggerLoveConfetti(e.currentTarget);
-  // mostrar mensagem
   msgOverlay.classList.add('show');
   msgOverlay.setAttribute('aria-hidden','false');
-  // esconder depois de 3.5s
   setTimeout(()=>{ msgOverlay.classList.remove('show'); msgOverlay.setAttribute('aria-hidden','true'); }, 3500);
 });
 
-btnNo.addEventListener('click', (e)=>{
-  // simplesmente exibe a tela preta com ok :c
+btnNo.addEventListener('click', ()=>{
   blackScreen.classList.add('show');
-  // opcional: após 6s, voltar para página inicial (aqui não auto volta, você pode recarregar)
 });
 
-/* se clicar no GIF, também confete */
 const gifWrap = document.getElementById('gifWrap');
 gifWrap.addEventListener('click', (e)=>{ burstHearts(e.clientX, e.clientY, 20); });
 
-/* Acessibilidade: fechar overlay com clique */
 msgOverlay.addEventListener('click', ()=>{ msgOverlay.classList.remove('show'); msgOverlay.setAttribute('aria-hidden','true'); });
 
-/* fallback: se Imgur não carregar, mostrar imagem alternativa (opcional) */
 const loveGif = document.getElementById('loveGif');
 loveGif.onerror = function(){
-  // se falhar, tenta a url alternativa do i.imgur
-  if(!this.src.includes('i.imgur.com')) this.src = 'https://i.imgur.com/Jq4yEbh.gif';
-  else {
-    // se ainda falhar, mostra uma imagem local inline (SVG coraçao animado)
-    this.outerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><svg viewBox="0 0 120 120" width="220" height="220" xmlns="http://www.w3.org/2000/svg"><g><path d="M60 102s-35-20.8-46-33.5C5 55.6 20.3 36 39.7 40.7 47 42.5 60 52 60 52s13-9.5 20.3-11.3C99.7 36 115 55.6 106 68.5 95 81.2 60 102 60 102z" fill="#ff7fb3"/></g></svg></div>`;
-  }
-};
-loveGif.onerror = function(){
   if(!this.src.includes('i.imgur.com')) this.src = 'https://i.imgur.com/Jq4yEbh.gif';
   else {
     this.outerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><svg viewBox="0 0 120 120" width="220" height="220" xmlns="http://www.w3.org/2000/svg"><g><path d="M60 102s-35-20.8-46-33.5C5 55.6 20.3 36 39.7 40.7 47 42.5 60 52 60 52s13-9.5 20.3-11.3C99.7 36 115 55.6 106 68.5 95 81.2 60 102 60 102z" fill="#ff7fb3"/></g></svg></div>`;
   }
 };
-</script> <!-- 🔹 Fecha o script anterior aqui -->
+</script>
 
-<!-- 🔸 Novo script da música -->
+<!-- 🎵 MÚSICA DE FUNDO -->
 <script>
-  // Música de fundo (loop infinito)
   const audio = new Audio('musica.mp3');
-  audio.loop = true; // repetir para sempre
-  audio.volume = 1.0; // volume normal
+  audio.loop = true;
+  audio.volume = 1.0;
 
-  // Tocar música ao primeiro clique em qualquer lugar
   document.addEventListener('click', function startMusic() {
     audio.play().catch(err => console.log('Autoplay bloqueado, aguardando interação:', err));
     document.removeEventListener('click', startMusic);
