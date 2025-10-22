@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>14obsession</title>
+<style>
+  :root{
+    --bg:#ffeef6; /* rosa pastel */
+    --paper:#fff1f6;
+    --accent:#ffb6d5;
+    --text:#6b3b4a;
+    --muted:#b67a88;
+    --button-bg:#ff7fb3;
+  }
+  html,body{height:100%;margin:0;font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial; background: linear-gradient(180deg,var(--bg),#fff0f5); color:var(--text);}
+  .app{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:30px;
+    box-sizing:border-box;
+    gap:30px;
+  }
+
+  /* container principal (desktop) */
+  .card{
+    width:100%;
+    max-width:1100px;
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:28px;
+    align-items:start;
+  }
+
+  /* Bilhete (lado esquerdo) */
+  .bilhete{
+    background: linear-gradient(180deg,var(--paper),#fff7fb);
+    border-radius:14px;
+    padding:28px;
+    box-shadow: 0 10px 30px rgba(107,59,74,0.08);
+    border:1px solid rgba(182,122,136,0.25);
+    position:relative;
+    min-height:360px;
+  }
+  .bilhete::before{
+    content:"";
+    position:absolute;
+    top:14px; left:14px; right:14px; height:1px;
+    background: linear-gradient(90deg, rgba(255,127,179,0.05), rgba(255,255,255,0.06));
+  }
+  h1.title{
+    margin:0 0 10px 0;
+    font-size:28px;
+    color:var(--text);
+    letter-spacing:0.6px;
+  }
+  .texto{
+    white-space:pre-wrap;
+    font-size:15px;
+    line-height:1.55;
+    color:var(--muted);
+    margin-top:8px;
+  }
+
+  /* area direita */
+  .lado-direito{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .gif-wrap{
+    width:360px;
+    height:360px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(180deg,#fff, #fff0f7);
+    border-radius:12px;
+    border:1px solid rgba(255,127,179,0.15);
+    box-shadow: 0 8px 22px rgba(171,82,125,0.06);
+    overflow:hidden;
+  }
+  .gif-wrap img{
+    max-width:100%;
+    max-height:100%;
+    display:block;
+    object-fit:contain;
+  }
+
+  .buttons-row{
+    display:flex;
+    gap:12px;
+    margin-top:6px;
+  }
+  button.btn{
+    background:var(--button-bg);
+    color:white;
+    border: none;
+    padding:10px 16px;
+    border-radius:12px;
+    font-weight:600;
+    cursor:pointer;
+    box-shadow:0 6px 14px rgba(255,127,179,0.18);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  button.btn:active{ transform:translateY(2px);}
+  button.ghost{
+    background:transparent;
+    border:1px solid rgba(107,59,74,0.08);
+    color:var(--text);
+  }
+
+  /* page 2 (oculta por padrão) */
+  .page{
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,238,246,0.92);
+    backdrop-filter: blur(2px);
+    opacity:0;
+    pointer-events:none;
+    transform: translateY(10px);
+    transition: all 420ms cubic-bezier(.2,.9,.25,1);
+    z-index:8;
+  }
+  .page.active{ opacity:1; pointer-events:auto; transform: translateY(0); }
+
+  .page-inner{
+    width:95%;
+    max-width:700px;
+    background:linear-gradient(180deg,#fff,#fff6fb);
+    padding:30px;
+    border-radius:18px;
+    text-align:center;
+    box-shadow:0 20px 50px rgba(107,59,74,0.08);
+    border:1px solid rgba(255,127,179,0.12);
+  }
+  .page-inner h2{
+    margin:6px 0 18px 0;
+    font-size:30px;
+    color:var(--text);
+  }
+  .page-inner .actions{display:flex; gap:14px; justify-content:center; margin-top:8px;}
+
+  /* overlay message */
+  .message-overlay{
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    z-index:20; pointer-events:none; opacity:0; transition: all 280ms ease;
+  }
+  .message-overlay.show{ pointer-events:auto; opacity:1; }
+  .message{
+    background:linear-gradient(180deg,#ffffff,#ffeef6);
+    padding:26px 28px; border-radius:14px; box-shadow:0 18px 44px rgba(107,59,74,0.12);
+    border:1px solid rgba(255,127,179,0.12); font-weight:700; color:var(--text);
+    font-size:22px;
+  }
+
+  /* tela preta para NAU */
+  .black-screen{
+    position:fixed; inset:0; background:#000; display:flex; align-items:center; justify-content:center; z-index:30;
+    color:#fff; font-size:28px; font-weight:700; display:none;
+  }
+  .black-screen.show{ display:flex; }
+
+  /* responsivo */
+  @media (max-width:900px){
+    .card{ grid-template-columns: 1fr; }
+    .gif-wrap{ width:320px; height:260px; }
+    .app{ padding:18px; }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <div class="card" role="main" aria-labelledby="page-title">
+      <section class="bilhete" aria-label="Bilhete de feliz primeiro mês">
+        <h1 id="page-title" class="title">Feliz com você</h1>
+        <div class="texto" id="bilhete-text">
+🎀PIIIIUUUUU, meu amor! Queria te dizer umas coisinhas...🎀
+Eu não sabia por onde começar, mas acho que a melhor forma é dizendo o quanto eu amo você e eu me sinto tão feliz, tão maravilhado, eu só tenho a agradecer por ter você ao meu lado todos os dias, meu bem! Você não tem ideia do quanto eu sou grato a você. Eu amo você, amo mais do que tudo! Você é literalmente a minha vida, o meu tudo, e eu não vivo mais sem você, saiba disso. 
+Eu nem imaginava que poderia chegar aqui com uma pessoa tão incrível. Eu realmente sou o garoto mais sortudo do mundo. 
+Às vezes eu não consigo acreditar que nosso amor é realmente recíproco, às vezes eu nem acredito que a pessoa que eu mais amo também me ama de volta. Isso me deixa tão feliz, eu sinto que conquistei tudo o que eu mais queria, um amor verdadeiro e sincero com uma pessoa verdadeira e sincera. 
+Isabel, eu amo você. Eu amo você e não quero perder você nunca. Apesar das nossas discussões, você ainda esteve aqui, apesar do ciúmes, você me deu um voto de confiança e acredita em mim, isso é algo que eu vou sempre lembrar e admirar em você. Você faz por mim coisas que eu jamais esperaria de alguém, e todas as coisas, das mais simples até as mais loucas, todas essas coisas são a razão pelo qual meus sentimentos por você crescem a cada dia que passa. E isso vai continuar acontecendo pra sempre, pois eu amo você, e vou fazer de tudo pra que possamos ficar juntinhos pra todo o sempre! Seremos 1 mês, 2, 3... pra sempre!
+Obrigado por tudo, meu amor! Tenho muito orgulho de você, de poder te chamar de minha, de poder dividir a minha vida contigo. Obrigado por ser minha garotinha! auau cui cuiiiiiiii 💓💗🐾🐇🐻🎀🌷
+🎀Tudo é mais lindo quando to do seu lado, mas eu sinto que falta uma coisa...🎀
+        </div>
+      </section>
+
+      <aside class="lado-direito" aria-label="Área com gif e botões">
+        <div class="gif-wrap" id="gifWrap" title="GIF do amor">
+          <!-- Tentei usar o ID do imgur. Se não aparecer, troque para a URL direta do gif (ex: https://i.imgur.com/Jq4yEbh.gif) -->
+          <img id="loveGif" src="https://i.imgur.com/cyTiNwi.gif" alt="Gif de amor (se não carregar, troque o src)" />
+        </div>
+
+        <div class="buttons-row">
+          <button class="btn" id="btn-love">Eu te amo</button>
+          <button class="btn ghost" id="btn-continue">Continuar?</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- Página 2 -->
+  <div class="page" id="page2" aria-hidden="true">
+    <div class="page-inner" role="dialog" aria-modal="true" aria-labelledby="ask-title">
+      <h2 id="ask-title">Você aceita namorar comigo?</h2>
+      <div class="actions">
+        <button class="btn" id="btn-yes">SIMMM :D</button>
+        <button class="btn ghost" id="btn-no">NAU :c</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagem após SIM -->
+  <div class="message-overlay" id="msgOverlay" aria-hidden="true">
+    <div class="message" id="loveMessage">Eu te amo muito muitão!</div>
+  </div>
+
+  <!-- Tela preta NAU -->
+  <div class="black-screen" id="blackScreen">ok :c</div>
+
+  <!-- Canvas para confete -->
+  <canvas id="confettiCanvas" style="position:fixed; inset:0; pointer-events:none; z-index:50;"></canvas>
+
+<script>
+/* ---------- navegação / transição ---------- */
+const btnContinue = document.getElementById('btn-continue');
+const page2 = document.getElementById('page2');
+const btnLove = document.getElementById('btn-love');
+const btnYes = document.getElementById('btn-yes');
+const btnNo = document.getElementById('btn-no');
+const msgOverlay = document.getElementById('msgOverlay');
+const loveMessage = document.getElementById('loveMessage');
+const blackScreen = document.getElementById('blackScreen');
+
+btnContinue.addEventListener('click', () => {
+  // suavemente abre a "next page"
+  page2.classList.add('active');
+  page2.setAttribute('aria-hidden','false');
+  // pequena animação de transição já via CSS
+});
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === "Escape"){
+    page2.classList.remove('active');
+    page2.setAttribute('aria-hidden','true');
+  }
+});
+
+/* ---------- confete em formato de coração no canvas ---------- */
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; });
+
+function rand(min, max){ return Math.random()*(max-min)+min; }
+
+class Heart {
+  constructor(x,y, vx, vy, size, life, hue){
+    this.x = x; this.y = y; this.vx = vx; this.vy = vy;
+    this.size = size; this.life = life; this.h = hue; this.age=0; this.rot = rand(0,Math.PI*2);
+  }
+  update(dt){
+    this.vy += 0.06 * dt; // gravidade leve
+    this.x += this.vx * dt;
+    this.y += this.vy * dt;
+    this.rot += 0.01 * dt;
+    this.age += dt;
+  }
+  draw(ctx){
+    ctx.save();
+    ctx.translate(this.x,this.y);
+    ctx.rotate(this.rot);
+    const s = this.size;
+    // desenhar um coração com path
+    ctx.beginPath();
+    ctx.moveTo(0, -s/2);
+    ctx.bezierCurveTo(s, -s*0.9, s*1.1, s*0.3, 0, s);
+    ctx.bezierCurveTo(-s*1.1, s*0.3, -s, -s*0.9, 0, -s/2);
+    ctx.closePath();
+    ctx.fillStyle = `hsla(${this.h},80%,60%,${Math.max(0, 1 - this.age/this.life)})`;
+    ctx.fill();
+    ctx.restore();
+  }
+}
+
+let hearts = [];
+function burstHearts(x,y, count=30){
+  for(let i=0;i<count;i++){
+    const angle = rand(-Math.PI,0);
+    const speed = rand(2,7);
+    const vx = Math.cos(angle)*speed + rand(-1,1);
+    const vy = Math.sin(angle)*speed + rand(-1,1);
+    const size = rand(8,20);
+    const life = rand(80,160);
+    const hue = 320 + rand(-20,20); // rosados/violeta
+    hearts.push(new Heart(x + rand(-8,8), y + rand(-8,8), vx, vy, size, life, hue));
+  }
+}
+
+/* animação */
+let last = performance.now();
+function animate(now){
+  const dt = Math.min(4,(now-last)/16.666); // frame-independent but clamped
+  last = now;
+  ctx.clearRect(0,0,W,H);
+  for(let i=hearts.length-1;i>=0;i--){
+    const h = hearts[i];
+    h.update(dt);
+    h.draw(ctx);
+    if(h.age > h.life || h.y > H + 40 || h.x < -40 || h.x > W+40) hearts.splice(i,1);
+  }
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+/* gatilhos dos botões para confete e mensagens */
+function triggerLoveConfetti(originElement){
+  // burst centered on element
+  const rect = originElement.getBoundingClientRect();
+  const x = rect.left + rect.width/2;
+  const y = rect.top + rect.height/2;
+  burstHearts(x,y, 36);
+  // pequenos adicionais
+  setTimeout(()=>burstHearts(x+rand(-40,40), y+rand(-40,40), 18), 120);
+  setTimeout(()=>burstHearts(x+rand(-60,60), y+rand(-60,60), 12), 300);
+}
+
+btnLove.addEventListener('click', (e)=>{
+  triggerLoveConfetti(e.currentTarget);
+});
+
+btnYes.addEventListener('click', (e)=>{
+  triggerLoveConfetti(e.currentTarget);
+  // mostrar mensagem
+  msgOverlay.classList.add('show');
+  msgOverlay.setAttribute('aria-hidden','false');
+  // esconder depois de 3.5s
+  setTimeout(()=>{ msgOverlay.classList.remove('show'); msgOverlay.setAttribute('aria-hidden','true'); }, 3500);
+});
+
+btnNo.addEventListener('click', (e)=>{
+  // simplesmente exibe a tela preta com ok :c
+  blackScreen.classList.add('show');
+  // opcional: após 6s, voltar para página inicial (aqui não auto volta, você pode recarregar)
+});
+
+/* se clicar no GIF, também confete */
+const gifWrap = document.getElementById('gifWrap');
+gifWrap.addEventListener('click', (e)=>{ burstHearts(e.clientX, e.clientY, 20); });
+
+/* Acessibilidade: fechar overlay com clique */
+msgOverlay.addEventListener('click', ()=>{ msgOverlay.classList.remove('show'); msgOverlay.setAttribute('aria-hidden','true'); });
+
+/* fallback: se Imgur não carregar, mostrar imagem alternativa (opcional) */
+const loveGif = document.getElementById('loveGif');
+loveGif.onerror = function(){
+  // se falhar, tenta a url alternativa do i.imgur
+  if(!this.src.includes('i.imgur.com')) this.src = 'https://i.imgur.com/Jq4yEbh.gif';
+  else {
+    // se ainda falhar, mostra uma imagem local inline (SVG coraçao animado)
+    this.outerHTML = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;"><svg viewBox="0 0 120 120" width="220" height="220" xmlns="http://www.w3.org/2000/svg"><g><path d="M60 102s-35-20.8-46-33.5C5 55.6 20.3 36 39.7 40.7 47 42.5 60 52 60 52s13-9.5 20.3-11.3C99.7 36 115 55.6 106 68.5 95 81.2 60 102 60 102z" fill="#ff7fb3"/></g></svg></div>`;
+  }
+};
+</script>
+</body>
+</html>
